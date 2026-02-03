@@ -1,0 +1,109 @@
+-- ============================================
+-- 1. �������� ���� ������
+-- ============================================
+USE plant_catalog_db;
+
+-- ============================================
+-- 2. �������� ������ � ���������� �������
+--    (������� �����������, ����� �������� �������)
+-- ============================================
+
+-- 2.1. ������� "��������� ��������"
+CREATE TABLE  semeistvo (
+    semeistvo_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    [name] VARCHAR(100) NOT NULL,
+    [name_latin] VARCHAR(100)
+);
+
+-- 2.2. ������� "��������� �����" � ������������ �� ������ �����
+CREATE TABLE  zhiznennaya_forma (
+    zhiznennaya_forma_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    [name] VARCHAR(50) NOT NULL,
+    CONSTRAINT chk_zhiznennaya_forma CHECK (
+        [name] IN ('�������', '������', '����������� ��������', '�������', '������', '�������')
+    )
+);
+
+-- 2.3. ������� "��������/�������"
+CREATE TABLE  patogen (
+    patogen_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    [name] VARCHAR(100) NOT NULL,
+    opisanie TEXT
+);
+
+-- 2.4. ������� "���������� � �����"
+CREATE TABLE trebovaniya_k_uhodu (
+    trebovaniya_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    osveshchenie VARCHAR(100),
+    poliv_letom VARCHAR(100),
+    poliv_zimoy VARCHAR(100),
+    temperatura_letom VARCHAR(50) ,
+    temperatura_zimoy VARCHAR(50)
+) ;
+
+-- 2.5. ������� "��������" (�������� �������)
+CREATE TABLE  rastenie (
+    rastenie_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    [name] VARCHAR(100) NOT NULL,
+    [name_latin] VARCHAR(150),
+    semeistvo_id INT,
+    zhiznennaya_forma_id INT,
+    trebovaniya_id INT,
+    
+    -- ������� �����
+    FOREIGN KEY (semeistvo_id) REFERENCES semeistvo(semeistvo_id) 
+        ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (zhiznennaya_forma_id) REFERENCES zhiznennaya_forma(zhiznennaya_forma_id) 
+        ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (trebovaniya_id) REFERENCES trebovaniya_k_uhodu(trebovaniya_id) 
+        ON DELETE SET NULL ON UPDATE CASCADE
+) ;
+
+-- 2.6. ������� "��������� ��������"
+CREATE TABLE  parametry_rasteniya (
+    parametry_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    vozrast INT ,
+    data_posadki DATE,
+    razmery VARCHAR(100),
+    rastenie_id INT NOT NULL,
+    
+    -- ������� ���� �� ��������
+    FOREIGN KEY (rastenie_id) REFERENCES rastenie(rastenie_id) 
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- 2.7. ������� "����"
+CREATE TABLE uhod (
+    uhod_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    data_i_vremya DATETIME,
+    opisanie TEXT NOT NULL,
+    rastenie_id INT NOT NULL,
+    
+    -- ������� ���� �� ��������
+    FOREIGN KEY (rastenie_id) REFERENCES rastenie(rastenie_id)
+	);
+        
+    
+   
+
+-- 2.8. ������� "������� ��������"
+CREATE TABLE istorii_boleznej (
+    istoriya_id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+    rastenie_id INT NOT NULL,
+    patogen_id INT NOT NULL,
+    data_nachala DATE NOT NULL,
+    data_okonchaniya DATE ,
+    opisanie VARCHAR(50),
+    
+    -- ������� �����
+    FOREIGN KEY (rastenie_id) REFERENCES rastenie(rastenie_id) 
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (patogen_id) REFERENCES patogen(patogen_id) 
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    -- ��������, ��� ���� ��������� �� ������ ���� ������
+    CONSTRAINT chk_dates CHECK (data_okonchaniya IS NULL OR data_okonchaniya >= data_nachala)
+	);
+
+
+
